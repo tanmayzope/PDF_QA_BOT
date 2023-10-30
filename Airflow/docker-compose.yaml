@@ -71,7 +71,7 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- PyPDF2 requests}
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- PyPDF2 requests tiktoken openai}
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
     OPENAI_KEY: ${OPENAI_KEY}
   volumes:
@@ -131,6 +131,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    #volumes:
+      #- ./CSV:/opt/airflow/CSV
+
 
   airflow-scheduler:
     <<: *airflow-common
@@ -169,6 +172,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    #volumes:
+      #- ./CSV:/opt/airflow/CSV
 
   airflow-triggerer:
     <<: *airflow-common
