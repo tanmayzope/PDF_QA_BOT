@@ -1,5 +1,8 @@
 import streamlit as st
 import requests
+import os
+
+FASTAPI_ENDPOINT = os.getenv("FASTAPI_ENDPOINT","http://localhost:8081")
 
 # Dictionary of document names and their corresponding links
 DOC_MAP = {
@@ -101,7 +104,7 @@ def qa_section():
         else:
             st.markdown(f"<span style='color: green'>Answer:</span> {item['content']}", unsafe_allow_html=True)
 
-    FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
+    #FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
 
     with st.form(key='qa_form', clear_on_submit=True):
         question_input = st.text_input('Enter your question:', value=st.session_state.get('question', ""))
@@ -138,7 +141,7 @@ def qa_section():
 
 if page == "Document Data":
     st.session_state.selected_doc_name = st.selectbox("Choose a Document:", list(DOC_MAP.keys()), index=list(DOC_MAP.keys()).index(st.session_state.selected_doc_name))
-    FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
+    #FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
 
     if st.button("Fetch Document Data"):
         selected_link = DOC_MAP[st.session_state.selected_doc_name]

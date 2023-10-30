@@ -25,6 +25,17 @@ dag = DAG(
     tags=["labs", "damg7245"],
 )
 
+def log_pdf_link(**kwargs):
+    # Extract the passed pdf_link from the configuration
+    pdf_link = kwargs["dag_run"].conf["pdf_link"]
+    print(f"Received pdf_link: {pdf_link}")
+
+log_pdf_link_task = PythonOperator(
+    task_id="log_pdf_link",
+    python_callable=log_pdf_link,
+    provide_context=True,
+    dag=dag
+)
 
 pdf_urls = {
     "FOCUS Report Part IIC Instructions": "https://www.sec.gov/files/formx-17a-5_2c-instr.pdf",
@@ -191,4 +202,4 @@ task2 = PythonOperator(
 )
 
 # Task dependencies
-task1 >> task2
+log_pdf_link_task >> task1 >> task2

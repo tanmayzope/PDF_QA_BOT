@@ -71,7 +71,7 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- PyPDF2 requests tiktoken openai}
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- PyPDF2 requests tiktoken openai openpyxl}
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
     OPENAI_KEY: ${OPENAI_KEY}
   volumes:
@@ -302,6 +302,29 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+
+  fastapi:
+    container_name: fastapi
+    build:
+      context: ./FastAPI
+    ports:
+      - "8504:8504"
+    # volumes:
+    #   - ./FastAPI:/app
+    environment:
+      - DATABASE_URL=test.db
+
+  streamlit:
+    container_name: streamlit
+    build:
+      context: ./Streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - fastapi
+    environment:
+      - FASTAPI_ENDPOINT=http://fastapi:8504
+
 
 volumes:
   postgres-db-volume:
