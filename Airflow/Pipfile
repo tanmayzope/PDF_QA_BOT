@@ -12,6 +12,7 @@ tiktoken = "*"
 pandas = "*"
 transformers = "*"
 openpyxl = "*"
+pinecone-client = "*"
 
 [dev-packages]
 

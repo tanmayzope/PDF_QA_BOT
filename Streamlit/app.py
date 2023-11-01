@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import os
 
-FASTAPI_ENDPOINT = os.getenv("FASTAPI_ENDPOINT","http://localhost:8081")
+FASTAPI_ENDPOINT = os.getenv("FASTAPI_ENDPOINT","http://localhost:8504")
 
 # Dictionary of document names and their corresponding links
 DOC_MAP = {
@@ -141,11 +141,10 @@ def qa_section():
 
 if page == "Document Data":
     st.session_state.selected_doc_name = st.selectbox("Choose a Document:", list(DOC_MAP.keys()), index=list(DOC_MAP.keys()).index(st.session_state.selected_doc_name))
-    #FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
 
     if st.button("Fetch Document Data"):
         selected_link = DOC_MAP[st.session_state.selected_doc_name]
-        response = requests.get(f"{FASTAPI_ENDPOINT}/get_document_data?doc_name={selected_link}")
+        response = requests.post(f"{FASTAPI_ENDPOINT}/get_document_data?doc_name={selected_link}")
         if response.status_code == 200:
             st.session_state.document_data = response.json()
         else:
@@ -153,7 +152,7 @@ if page == "Document Data":
 
     if st.session_state.document_data:
         st.subheader("Extracted Text:")
-        st.write(st.session_state.document_data['text'])
+        st.write(st.session_state.document_data['pdf_text'])
 
         st.subheader("Metadata:")
         st.write("Name of the form/file:", st.session_state.document_data['metadata']['form_name'])

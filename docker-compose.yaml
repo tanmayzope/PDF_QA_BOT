@@ -79,6 +79,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/CSV:/opt/airflow/CSV
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -114,7 +115,7 @@ services:
       retries: 50
       start_period: 30s
     restart: always
-
+#AIRFLOWENDPOINT HERE
   airflow-webserver:
     <<: *airflow-common
     command: webserver
@@ -309,10 +310,14 @@ services:
       context: ./FastAPI
     ports:
       - "8504:8504"
+    depends_on:
+      - airflow-webserver
     # volumes:
     #   - ./FastAPI:/app
     environment:
       - DATABASE_URL=test.db
+      - AIRFLOW_API_ENDPOINT=http://airflow-webserver:8080/api/v1/dags/sandbox/dagRuns
+
 
   streamlit:
     container_name: streamlit
