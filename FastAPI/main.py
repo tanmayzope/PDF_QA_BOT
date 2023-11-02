@@ -194,7 +194,7 @@ async def get_document_data(doc_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/get-answer/")
-async def get_answer(question: str, context: str, token: str = Depends(oauth2_scheme)):
+async def get_answer(question: str, context: str):
     # Implement your Q/A logic here using the provided question and context
     # For demonstration, I'll return a mock answer
     return {"answer": "This is a mock answer to your question."}

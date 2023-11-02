@@ -71,9 +71,11 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- PyPDF2 requests tiktoken openai openpyxl}
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- PyPDF2 requests tiktoken openai openpyxl pinecone-client}
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
     OPENAI_KEY: ${OPENAI_KEY}
+    PINECONE_API_KEY: ${PINECONE_API_KEY}
+    PINECONE_ENV: ${PINECONE_ENV}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -128,6 +130,13 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    environment:
+      <<: *airflow-common-env
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      OPENAI_KEY: ${OPENAI_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_ENV: ${PINECONE_ENV}
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -167,6 +176,9 @@ services:
       <<: *airflow-common-env
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      OPENAI_KEY: ${OPENAI_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_ENV: ${PINECONE_ENV}
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
