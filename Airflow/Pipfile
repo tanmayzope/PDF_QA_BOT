@@ -6,6 +6,13 @@ name = "pypi"
 [packages]
 apache-airflow = "*"
 pyyaml = "*"
+pypdf2 = "*"
+openai = "*"
+tiktoken = "*"
+pandas = "*"
+transformers = "*"
+openpyxl = "*"
+pinecone-client = "*"
 
 [dev-packages]
 

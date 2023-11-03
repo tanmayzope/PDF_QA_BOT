@@ -1,5 +1,8 @@
 import streamlit as st
 import requests
+import os
+
+FASTAPI_ENDPOINT = os.getenv("FASTAPI_ENDPOINT", "http://localhost:8504")
 
 # Dictionary of document names and their corresponding links
 DOC_MAP = {
@@ -10,156 +13,164 @@ DOC_MAP = {
     "Exam Brochure": "https://www.sec.gov/files/exam-brochure.pdf"
 }
 
-# Initial session state setup
-if 'user_mode' not in st.session_state:
-    st.session_state.user_mode = 'login'
-if 'selected_doc_name' not in st.session_state:
-    st.session_state.selected_doc_name = list(DOC_MAP.keys())[0]
-if 'document_data' not in st.session_state:
-    st.session_state.document_data = None
-if 'question' not in st.session_state:
-    st.session_state.question = ""
-if 'answer' not in st.session_state:
-    st.session_state.answer = None
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = "Document Data"
-if 'conversation' not in st.session_state:
-    st.session_state.conversation = []
-# if 'jwt_token' not in st.session_state:
-#     st.session_state.jwt_token = None
-# if 'logged_in' not in st.session_state:
-#     st.session_state.logged_in = False
+# Initialize session state variables
+if 'conversation_history' not in st.session_state:
+    st.session_state['conversation_history'] = []
+if 'jwt_token' not in st.session_state:
+    st.session_state['jwt_token'] = None
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'selected_docs' not in st.session_state:
+    st.session_state['selected_docs'] = []
+if 'submit_reg_clicked' not in st.session_state:
+    st.session_state['submit_reg_clicked'] = False
+if 'submit_login_clicked' not in st.session_state:
+    st.session_state['submit_login_clicked'] = False
+if 'get_answer_clicked' not in st.session_state:
+    st.session_state['get_answer_clicked'] = False
+if 'selected_option' not in st.session_state:  # This line was missing
+    st.session_state['selected_option'] = None
 
-st.title("Document Query Interface")
+def display_initial_page():
+    st.title("User Authentication")
+    selected_option = st.radio("Select an option:", ["Log in", "Register a new user"])
+    if selected_option == "Log in":
+        st.session_state['selected_option'] = "login"
+    else:
+        st.session_state['selected_option'] = "register"
 
-# Optional: Add your logo or branding image
-# st.sidebar.image("your_logo_path_here.png", width=200)
+def jwt_auth():
+    st.title("User Authentication")
+    
+    # Register User
+    if st.button("Register a New User"):
+        st.session_state['selected_option'] = "register"
+    
+    # Login User
+    if st.button("Log in"):
+        st.session_state['selected_option'] = "login"
 
-st.sidebar.title("Navigation")
-page = st.sidebar.selectbox("Choose a Page:", ["Document Data", "Question & Answer"], index=0 if st.session_state.current_page == "Document Data" else 1)
-st.session_state.current_page = page
+    # Display the appropriate form based on the user's choice
+    if st.session_state.get('selected_option') == "register":
+        with st.form("Register Form"):
+            reg_username = st.text_input("Choose a Username")
+            reg_password = st.text_input("Choose a Password", type="password")
+            submit_reg = st.form_submit_button("Register")
+            
+            if submit_reg:
+                registration_data = {"username": reg_username, "password": reg_password}
+                try:
+                    response = requests.post(f"{FASTAPI_ENDPOINT}/register", json=registration_data)
+                    if response.status_code == 200:
+                        st.session_state['jwt_token'] = response.json().get('access_token')
+                        st.session_state['logged_in'] = True
+                        st.success("Successfully registered and logged in!")
+                        # Reset the selected option to prevent form resubmission
+                        st.session_state['selected_option'] = None
+                    else:
+                        st.error(response.json().get('detail', "Registration failed. Please try again."))
+                except requests.exceptions.RequestException as e:
+                    st.error(f"An error occurred while connecting to the server: {e}")
 
-# def registration_section():
-#     st.header("User Registration")
-#     username = st.text_input("Choose a Username")
-#     password = st.text_input("Choose a Password", type="password")
+    elif st.session_state.get('selected_option') == "login":
+        with st.form("Login Form"):
+            login_username = st.text_input("Username")
+            login_password = st.text_input("Password", type="password")
+            submit_login = st.form_submit_button("Login")
 
-#     if st.button("Register"):
-#         FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
-#         registration_data = {"username": username, "password": password}
-#         response = requests.post(f"{FASTAPI_ENDPOINT}/register", registration_data)
-        
-#         # Handle API responses
-#         if response.status_code == 200:
-#             st.session_state.jwt_token = response.json().get('token')
-#             st.session_state.logged_in = True
-#             st.success("Successfully registered and logged in!")
-#             st.session_state.user_mode = 'login'
-#         elif response.status_code == 400:
-#             st.warning(response.json().get('detail', "Registration failed. Please choose another username."))
-#         else:
-#             st.error("An error occurred during registration. Please try again.")
+            if submit_login:
+                login_data = {"username": login_username, "password": login_password}
+                try:
+                    response = requests.post(f"{FASTAPI_ENDPOINT}/token", data=login_data)
+                    if response.status_code == 200:
+                        st.session_state['jwt_token'] = response.json().get('access_token')
+                        st.session_state['logged_in'] = True
+                        st.success("Logged in successfully!")
+                        # Reset the selected option to prevent form resubmission
+                        st.session_state['selected_option'] = None
+                    else:
+                        st.error("Incorrect username or password. Please try again.")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"An error occurred while connecting to the server: {e}")
 
-#     if st.button("Switch to Login"):
-#         st.session_state.user_mode = 'login'
+    # Allow user to reset the choice and go back to the main menu
+    if st.session_state.get('selected_option'):
+        if st.button("Back"):
+            st.session_state['selected_option'] = None
 
 
-# def login_section():
-#     st.header("User Login")
 
-#     username = st.text_input("Username")
-#     password = st.text_input("Password", type="password")
+# Main page layout after authentication
+def main_layout():
+    st.title("Document Query Interface")
 
-#     if st.button("Login"):
-#         FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
-#         login_data = {
-#             "username": username,
-#             "password": password
-#         }
-#         response = requests.post(f"{FASTAPI_ENDPOINT}/login", login_data)
+    # Create a placeholder for the warning message
+    warning_placeholder = st.empty()
 
-#         if response.status_code == 200:
-#             st.session_state.jwt_token = response.json().get('token')
-#             st.session_state.logged_in = True
-#             st.success("Logged in successfully!")
-#         else:
-#             st.warning("Incorrect username or password. Please try again.")
+    # Retrieve previously selected documents from session state or use an empty list
+    previously_selected_docs = st.session_state.get('selected_docs', [])
 
-#     if st.button("Switch to Register"):
-#         st.session_state.user_mode = 'register'
+    # Document selection
+    selected_docs = st.multiselect(
+        "Choose Documents:",
+        list(DOC_MAP.keys()),
+        default=previously_selected_docs,
+        key='doc_selection_key'
+    )
 
-def qa_section():
-    st.header("Question/Answer System")
+    # Update session state with the selected docs
+    st.session_state['selected_docs'] = selected_docs
 
-    if not st.session_state.get('document_data'):
-        st.write("Please fetch a document data first to ask questions.")
-        return
+    # If no document is selected, show the warning in the previously created empty slot
+    if not selected_docs:
+        warning_placeholder.warning("No documents selected.")
+    else:
+        warning_placeholder.empty()  # clear the warning message
 
-    for item in st.session_state.get('conversation', []):
-        if item["role"] == "user":
-            st.markdown(f"<span style='color: red'>Question:</span> {item['content']}", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<span style='color: green'>Answer:</span> {item['content']}", unsafe_allow_html=True)
+    # Display previous conversation
+    if 'conversation_history' in st.session_state:
+        for convo in st.session_state.conversation_history:
+            st.write(f"Question: {convo['question']}")
+            st.write(f"Answer: {convo['answer']}")
 
-    FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
-
+    # Q&A Section within a form
     with st.form(key='qa_form', clear_on_submit=True):
-        question_input = st.text_input('Enter your question:', value=st.session_state.get('question', ""))
+        question_input = st.text_input('Enter your question here:', key='question_input')
+        submit_button = st.form_submit_button("Get Answer")
 
-        if st.form_submit_button("Get Answer"):
-            st.session_state.conversation.append({"role": "user", "content": question_input})
-
-            with st.spinner('Finding answer...'):
+    if submit_button:
+        if not selected_docs:
+            st.warning("Please select at least one document to proceed with your question.")
+        elif question_input:
+            with st.spinner(f'Fetching answers for selected documents...'):
                 data = {
                     "question": question_input,
-                    "context": st.session_state.document_data['text']
+                    "context": selected_docs
                 }
-                response = requests.post(f"{FASTAPI_ENDPOINT}/get-answer/", data=data)
-                answer_data = response.json()
-
-                if "answer" in answer_data:
-                    answer = answer_data['answer']
-                    st.session_state.conversation.append({"role": "ai", "content": answer})
-
-            st.session_state.question = question_input
-            st.session_state.question = ""
-
-# if not st.session_state.logged_in:
-#     if st.session_state.user_mode == 'register':
-#         registration_section()
-#     else:
-#         login_section()
-# else:
-    # sidebar_column, main_content = st.columns([1, 4])
-
-    # sidebar_column.title("Navigation")
-    # page = sidebar_column.selectbox("Choose a Page:", ["Document Data", "Question & Answer"], index=0 if st.session_state.current_page == "Document Data" else 1)
-    # st.session_state.current_page = page
-
-if page == "Document Data":
-    st.session_state.selected_doc_name = st.selectbox("Choose a Document:", list(DOC_MAP.keys()), index=list(DOC_MAP.keys()).index(st.session_state.selected_doc_name))
-    FASTAPI_ENDPOINT = "http://127.0.0.1:8504"
-
-    if st.button("Fetch Document Data"):
-        selected_link = DOC_MAP[st.session_state.selected_doc_name]
-        response = requests.get(f"{FASTAPI_ENDPOINT}/get_document_data?doc_name={selected_link}")
-        if response.status_code == 200:
-            st.session_state.document_data = response.json()
+                headers = {"Authorization": f"Bearer {st.session_state['jwt_token']}"}
+                response = requests.post(f"{FASTAPI_ENDPOINT}/get-answer/", json=data, headers=headers)
+                if response.status_code == 200:
+                    answer_data = response.json()
+                    # Append the conversation to the history
+                    st.session_state.conversation_history.append(
+                        {"question": question_input, "answer": answer_data['answer']}
+                    )
+                    st.experimental_rerun()
+                else:
+                    st.error("Failed to fetch the answers. Please try again.")
         else:
-            st.warning("Failed to fetch document data. Please try again.")
+            st.warning("Please enter a question to get an answer.")
 
-    if st.session_state.document_data:
-        st.subheader("Extracted Text:")
-        st.write(st.session_state.document_data['text'])
+    if st.button("Log Out"):
+        st.session_state['logged_in'] = False
+        st.session_state['jwt_token'] = None
+        st.session_state['selected_docs'] = []
+        st.session_state['conversation_history'] = []
+        st.info("You have successfully logged out.")
 
-        st.subheader("Metadata:")
-        st.write("Name of the form/file:", st.session_state.document_data['metadata']['form_name'])
-        st.write("Number of pages:", st.session_state.document_data['metadata']['page_count'])
-        st.write("Number of characters:", st.session_state.document_data['metadata']['char_count'])
-        st.write("Time taken to extract:", st.session_state.document_data['metadata']['extraction_time'])
 
-elif page == "Question & Answer":
-    qa_section()
-
-# Note: The FastAPI backend endpoints `/get_document_data` and `/get-answer/` are placeholders and 
-# should be replaced with the actual endpoints and their expected request format.
+# Show the JWT authentication form or the main layout based on login status
+if not st.session_state['logged_in']:
+    jwt_auth()
+else:
+    main_layout()
