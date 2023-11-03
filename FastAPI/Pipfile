@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 fastapi = "*"
-jose = "*"
 pydantic = "*"
 typing = "*"
 sqlalchemy = "*"
@@ -16,7 +15,9 @@ python-multipart = "*"
 pyyaml = "*"
 python-dotenv = "*"
 passlib = {extras = ["bcrypt"], version = "*"}
-python-jose = {extras = ["cryptography"], version = "*"}
+python-jose = "*"
+pinecone-client = "*"
+openai = "*"
 
 [dev-packages]
 

@@ -37,66 +37,64 @@ def display_initial_page():
     else:
         st.session_state['selected_option'] = "register"
 
-# UI layout and JWT authentication
-# UI layout and JWT authentication
 def jwt_auth():
     st.title("User Authentication")
     
-    # If no option is selected, show both options to the user
-    if st.session_state['selected_option'] is None:
-        if st.button("Register a New User"):
-            st.session_state['selected_option'] = "register"
-        if st.button("Log in"):
-            st.session_state['selected_option'] = "login"
-        return
+    # Register User
+    if st.button("Register a New User"):
+        st.session_state['selected_option'] = "register"
+    
+    # Login User
+    if st.button("Log in"):
+        st.session_state['selected_option'] = "login"
 
-    # If Register option is selected
-    if st.session_state['selected_option'] == "register":
-        with st.form("Register Form", clear_on_submit=True):
-            st.subheader("Register")
-            reg_username = st.text_input("Choose a Username", key="reg_username")
-            reg_password = st.text_input("Choose a Password", type="password", key="reg_password")
+    # Display the appropriate form based on the user's choice
+    if st.session_state.get('selected_option') == "register":
+        with st.form("Register Form"):
+            reg_username = st.text_input("Choose a Username")
+            reg_password = st.text_input("Choose a Password", type="password")
             submit_reg = st.form_submit_button("Register")
-
+            
             if submit_reg:
-                st.session_state['submit_reg_clicked'] = True
-
-            if st.session_state.get('submit_reg_clicked', False):
                 registration_data = {"username": reg_username, "password": reg_password}
-                response = requests.post(f"{FASTAPI_ENDPOINT}/register", data=registration_data)
-                if response.status_code == 200:
-                    st.session_state['jwt_token'] = response.json().get('access_token')
-                    st.session_state['logged_in'] = True
-                    st.success("Successfully registered and logged in!")
-                elif response.status_code == 400:
-                    st.error(response.json().get('detail', "Registration failed. Please try again."))
-                st.session_state['submit_reg_clicked'] = False
+                try:
+                    response = requests.post(f"{FASTAPI_ENDPOINT}/register", json=registration_data)
+                    if response.status_code == 200:
+                        st.session_state['jwt_token'] = response.json().get('access_token')
+                        st.session_state['logged_in'] = True
+                        st.success("Successfully registered and logged in!")
+                        # Reset the selected option to prevent form resubmission
+                        st.session_state['selected_option'] = None
+                    else:
+                        st.error(response.json().get('detail', "Registration failed. Please try again."))
+                except requests.exceptions.RequestException as e:
+                    st.error(f"An error occurred while connecting to the server: {e}")
 
-    # If Login option is selected
-    elif st.session_state['selected_option'] == "login":
-        with st.form("Login Form", clear_on_submit=True):
-            st.subheader("Login")
-            login_username = st.text_input("Username", key="login_username")
-            login_password = st.text_input("Password", type="password", key="login_password")
+    elif st.session_state.get('selected_option') == "login":
+        with st.form("Login Form"):
+            login_username = st.text_input("Username")
+            login_password = st.text_input("Password", type="password")
             submit_login = st.form_submit_button("Login")
 
             if submit_login:
-                st.session_state['submit_login_clicked'] = True
-
-            if st.session_state.get('submit_login_clicked', False):
                 login_data = {"username": login_username, "password": login_password}
-                response = requests.post(f"{FASTAPI_ENDPOINT}/token", data=login_data)
-                if response.status_code == 200:
-                    st.session_state['jwt_token'] = response.json().get('access_token')
-                    st.session_state['logged_in'] = True
-                    st.success("Logged in successfully!")
-                else:
-                    st.error("Incorrect username or password. Please try again.")
-                st.session_state['submit_login_clicked'] = False
-    
-    # Add a back button to return to the selection
-    if st.button("Back"):
-        st.session_state['selected_option'] = None
+                try:
+                    response = requests.post(f"{FASTAPI_ENDPOINT}/token", data=login_data)
+                    if response.status_code == 200:
+                        st.session_state['jwt_token'] = response.json().get('access_token')
+                        st.session_state['logged_in'] = True
+                        st.success("Logged in successfully!")
+                        # Reset the selected option to prevent form resubmission
+                        st.session_state['selected_option'] = None
+                    else:
+                        st.error("Incorrect username or password. Please try again.")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"An error occurred while connecting to the server: {e}")
+
+    # Allow user to reset the choice and go back to the main menu
+    if st.session_state.get('selected_option'):
+        if st.button("Back"):
+            st.session_state['selected_option'] = None
 
 
 
@@ -134,7 +132,7 @@ def main_layout():
         with st.spinner(f'Fetching answers for selected documents...'):
             data = {
                 "question": question_input,
-                "documents": selected_docs
+                "context": selected_docs
             }
             headers = {"Authorization": f"Bearer {st.session_state['jwt_token']}"}
             response = requests.post(f"{FASTAPI_ENDPOINT}/get-answer/", json=data, headers=headers)

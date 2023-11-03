@@ -13,7 +13,7 @@ import pandas as pd
 import requests
 import threading
 
-
+OPEN_API_KEY = os.environ.get("OPEN_API_KEY")
 
 # DAG Settings
 dag = DAG(
@@ -25,17 +25,6 @@ dag = DAG(
     tags=["labs", "damg7245"],
 )
 
-# def log_pdf_link(**kwargs):
-#     # Extract the passed pdf_link from the configuration
-#     pdf_link = kwargs["dag_run"].conf["pdf_link"]
-#     print(f"Received pdf_link: {pdf_link}")
-
-# log_pdf_link_task = PythonOperator(
-#     task_id="log_pdf_link",
-#     python_callable=log_pdf_link,
-#     provide_context=True,
-#     dag=dag
-# )
 
 pdf_urls = {
     "FOCUS Report Part IIC Instructions": "https://www.sec.gov/files/formx-17a-5_2c-instr.pdf",
@@ -77,77 +66,104 @@ def extract_texts_from_urls(pdf_urls):
 
     return extracted_text
 
-def split_into_many(extracted_text, tokenizer,  max_tokens = 500): 
-        
+def split_into_many(text, tokenizer, max_tokens = 500):
+
     # Split the text into sentences
-        sentences = extracted_text.split('. ')
-    
-        # Get the number of tokens for each sentence
-        n_tokens = [len(tokenizer.encode(" " + sentence)) for sentence in sentences]
-    
-        chunks = []
-        tokens_so_far = 0
-        chunk = []
-    
-        # Loop through the sentences and tokens joined together in a tuple
-        for sentence, token in zip(sentences, n_tokens):
-    
-            # If the number of tokens so far plus the number of tokens in the current sentence is greater
-            # than the max number of tokens, then add the chunk to the list of chunks and reset
-            # the chunk and tokens so far
-            if tokens_so_far + token > max_tokens:
-                chunks.append(". ".join(chunk) + ".")
-                chunk = []
-                tokens_so_far = 0
-    
-            # If the number of tokens in the current sentence is greater than the max number of
-            # tokens, go to the next sentence
-            if token > max_tokens:
-                continue
-    
-            # Otherwise, add the sentence to the chunk and add the number of tokens to the total
-            chunk.append(sentence)
-            tokens_so_far += token + 1
-    
-        # Add the last chunk to the list of chunks
-        if chunk:
+    sentences = text.split('. ')
+
+    # Get the number of tokens for each sentence
+    n_tokens = [len(tokenizer.encode(" " + sentence)) for sentence in sentences]
+
+    chunks = []
+    tokens_so_far = 0
+    chunk = []
+
+    # Loop through the sentences and tokens joined together in a tuple
+    for sentence, token in zip(sentences, n_tokens):
+
+        # If the number of tokens so far plus the number of tokens in the current sentence is greater
+        # than the max number of tokens, then add the chunk to the list of chunks and reset
+        # the chunk and tokens so far
+        if tokens_so_far + token > max_tokens:
             chunks.append(". ".join(chunk) + ".")
-    
-        return chunks
+            chunk = []
+            tokens_so_far = 0
 
-def generate_embeddings(extracted_text, **kwargs):
+        # If the number of tokens in the current sentence is greater than the max number of
+        # tokens, go to the next sentence
+        if token > max_tokens:
+            continue
+
+        # Otherwise, add the sentence to the chunk and add the number of tokens to the total
+        chunk.append(sentence)
+        tokens_so_far += token + 1
+
+    # Add the last chunk to the list of chunks
+    if chunk:
+        chunks.append(". ".join(chunk) + ".")
+
+    return chunks
+
+def generate_embeddings(**kwargs):
     # Assuming extracted_text is from a single PDF:
-    pdf_name = "Default PDF Name"  # Replace with an actual name if needed.
-    data = []
+    #pdf_name = "Default PDF Name"  # Replace with an actual name if needed.
 
+    task_instance = kwargs['ti']
+    pdf_urls = task_instance.xcom_pull(task_ids='extract_data_from_pdf')
+    if pdf_urls is None:
+        raise ValueError("No data retrieved from XCom.")
+
+    data = []
+    df = pd.DataFrame(list(pdf_urls.items()), columns=['PDF_Name', 'text'])
     # Tokenizer
     tokenizer = tiktoken.get_encoding("cl100k_base")
-    n_tokens = len(tokenizer.encode(extracted_text))
+    #n_tokens = len(tokenizer.encode(text))
     max_tokens = 500
+    # if n_tokens > max_tokens:
+    #     chunks = split_into_many(extracted_text, tokenizer)
+    #     for chunk in chunks:
+    #         shortened_tokens = len(tokenizer.encode(chunk))
+    #         data.append({
+    #             'PDF Name': pdf_name,
+    #             'text': extracted_text,
+    #             'n_tokens': n_tokens,
+    #             'shortened_text': chunk,
+    #             'shortened_tokens': shortened_tokens
+    #         })
+    # else:
+    #     data.append({
+    #         'PDF Name': pdf_name,
+    #         'text': extracted_text,
+    #         'n_tokens': n_tokens,
+    #         'shortened_text': extracted_text,
+    #         'shortened_tokens': n_tokens
+    #     })
 
-    if n_tokens > max_tokens:
-        chunks = split_into_many(extracted_text, tokenizer)
-        for chunk in chunks:
-            shortened_tokens = len(tokenizer.encode(chunk))
-            data.append({
-                'PDF Name': pdf_name,
-                'text': extracted_text,
-                'n_tokens': n_tokens,
-                'shortened_text': chunk,
-                'shortened_tokens': shortened_tokens
-            })
-    else:
-        data.append({
-            'PDF Name': pdf_name,
-            'text': extracted_text,
-            'n_tokens': n_tokens,
-            'shortened_text': extracted_text,
-            'shortened_tokens': n_tokens
-        })
+    for pdf_name, text in pdf_urls.items():
+        if text:
+            n_tokens = len(tokenizer.encode(text))
+            if n_tokens > max_tokens:
+                chunks = split_into_many(text, tokenizer)
+                for chunk in chunks:
+                    shortened_tokens = len(tokenizer.encode(chunk))
+                    data.append({
+                        'PDF_Name': pdf_name,
+                        'text': text,
+                        'n_tokens': n_tokens,
+                        'shortened_text': chunk,
+                        'shortened_tokens': shortened_tokens  # Add this new key-value pair
+                    })
+            else:
+                data.append({
+                    'PDF_Name': pdf_name,
+                    'text': text,
+                    'n_tokens': n_tokens,
+                    'shortened_text': text,
+                    'shortened_tokens': n_tokens  # Here, the original text and the shortened text are the same
+                })
 
     df = pd.DataFrame(data)
-    openai.api_key = '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'  # Ensure you securely handle this key!
-
+    openai.api_key = "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"
     df['shortened_embeddings'] = df['shortened_text'].apply(
         lambda x: openai.Embedding.create(input=x, engine='text-embedding-ada-002')['data'][0]['embedding']
     )
@@ -184,7 +200,10 @@ def dump_to_csv(df, csv_file_name=None):
     return csv_file_name
 
 def extract_data_from_pdf(**kwargs):
-    return extract_texts_from_urls(pdf_urls)
+    extracted_texts = extract_texts_from_urls(pdf_urls)
+    task_instance = kwargs['ti']
+    task_instance.xcom_push(key='extracted_texts', value=extracted_texts)
+    return extracted_texts
 
 # Task definitions for Airflow
 task1 = PythonOperator(
@@ -196,7 +215,6 @@ task1 = PythonOperator(
 task2 = PythonOperator(
     task_id='generate_embeddings',
     python_callable=generate_embeddings,
-    op_args=['{{ ti.xcom_pull(task_ids="extract_data_from_pdf") }}'],
     provide_context=True,
     dag=dag
 )
