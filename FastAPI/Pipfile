@@ -6,16 +6,17 @@ name = "pypi"
 [packages]
 fastapi = "*"
 jose = "*"
-passlib = "*"
 pydantic = "*"
 typing = "*"
 sqlalchemy = "*"
 pypdf2 = "*"
 requests = "*"
 uvicorn = "*"
-python-jose = "*"
 python-multipart = "*"
 pyyaml = "*"
+python-dotenv = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
+python-jose = {extras = ["cryptography"], version = "*"}
 
 [dev-packages]
 
