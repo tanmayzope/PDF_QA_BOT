@@ -1,7 +1,5 @@
 # Assignment_03
 
-# Assignment_03
-
 ## Links
 
 ### Link to Codelabs: https://codelabs-preview.appspot.com/?file_id=1pfzEO4BiOmfMNl1dTbG8PM2S5FmOmJgInkq3Z08EELA#0
