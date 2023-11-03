@@ -14,6 +14,8 @@ DOC_MAP = {
 }
 
 # Initialize session state variables
+if 'conversation_history' not in st.session_state:
+    st.session_state['conversation_history'] = []
 if 'jwt_token' not in st.session_state:
     st.session_state['jwt_token'] = None
 if 'logged_in' not in st.session_state:
@@ -121,32 +123,51 @@ def main_layout():
 
     # If no document is selected, show the warning in the previously created empty slot
     if not selected_docs:
-        warning_placeholder.warning("No documents selected. Please select at least one document to proceed.")
+        warning_placeholder.warning("No documents selected.")
     else:
         warning_placeholder.empty()  # clear the warning message
 
-    # Question/Answer Section
-    question_input = st.text_input('Enter your question here:', key='question_input')
-    
-    if st.button("Get Answer"):
-        with st.spinner(f'Fetching answers for selected documents...'):
-            data = {
-                "question": question_input,
-                "context": selected_docs
-            }
-            headers = {"Authorization": f"Bearer {st.session_state['jwt_token']}"}
-            response = requests.post(f"{FASTAPI_ENDPOINT}/get-answer/", json=data, headers=headers)
-            if response.status_code == 200:
-                answer_data = response.json()
-                for doc_name, answer in answer_data.items():
-                    st.write(f"Answer for {doc_name}: {answer}")
-            else:
-                st.error("Failed to fetch the answers. Please try again.")
+    # Display previous conversation
+    if 'conversation_history' in st.session_state:
+        for convo in st.session_state.conversation_history:
+            st.write(f"Question: {convo['question']}")
+            st.write(f"Answer: {convo['answer']}")
+
+    # Q&A Section within a form
+    with st.form(key='qa_form', clear_on_submit=True):
+        question_input = st.text_input('Enter your question here:', key='question_input')
+        submit_button = st.form_submit_button("Get Answer")
+
+    if submit_button:
+        if not selected_docs:
+            st.warning("Please select at least one document to proceed with your question.")
+        elif question_input:
+            with st.spinner(f'Fetching answers for selected documents...'):
+                data = {
+                    "question": question_input,
+                    "context": selected_docs
+                }
+                headers = {"Authorization": f"Bearer {st.session_state['jwt_token']}"}
+                response = requests.post(f"{FASTAPI_ENDPOINT}/get-answer/", json=data, headers=headers)
+                if response.status_code == 200:
+                    answer_data = response.json()
+                    # Append the conversation to the history
+                    st.session_state.conversation_history.append(
+                        {"question": question_input, "answer": answer_data['answer']}
+                    )
+                    st.experimental_rerun()
+                else:
+                    st.error("Failed to fetch the answers. Please try again.")
+        else:
+            st.warning("Please enter a question to get an answer.")
 
     if st.button("Log Out"):
         st.session_state['logged_in'] = False
         st.session_state['jwt_token'] = None
+        st.session_state['selected_docs'] = []
+        st.session_state['conversation_history'] = []
         st.info("You have successfully logged out.")
+
 
 # Show the JWT authentication form or the main layout based on login status
 if not st.session_state['logged_in']:
