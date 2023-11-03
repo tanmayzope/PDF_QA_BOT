@@ -2,11 +2,11 @@
 
 ## Links
 
-### Link to Codelabs: https://codelabs-preview.appspot.com/?file_id=1pfzEO4BiOmfMNl1dTbG8PM2S5FmOmJgInkq3Z08EELA#0
+##### Link to Codelabs: https://codelabs-preview.appspot.com/?file_id=1pfzEO4BiOmfMNl1dTbG8PM2S5FmOmJgInkq3Z08EELA#0
 
-### Link to Embeddings Generation Notebook: [Colab Notebook 1](https://colab.research.google.com/drive/1xm_wly8FaR08YHIZxt_a7QVNytad0_U1?usp=sharing)
+##### Link to Embeddings Generation Notebook: [Colab Notebook 1](https://colab.research.google.com/drive/1xm_wly8FaR08YHIZxt_a7QVNytad0_U1?usp=sharing)
 
-### Link to Pinecone Vector Database Connection Notebook: [Colab Notebook 2](https://colab.research.google.com/drive/1VSvT8B2XzmdYhKsVpLrBavRlg6MMrRlo?usp=sharing) 
+##### Link to Pinecone Vector Database Connection Notebook: [Colab Notebook 2](https://colab.research.google.com/drive/1VSvT8B2XzmdYhKsVpLrBavRlg6MMrRlo?usp=sharing) 
 -----------------
 
 ## Setup Instructions
