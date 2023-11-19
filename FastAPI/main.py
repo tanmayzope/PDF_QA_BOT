@@ -21,7 +21,7 @@ secret_key = secrets.token_hex(32)
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
 PINECONE_ENV = os.environ.get("PINECONE_ENV")
 OPEN_API_KEY = os.environ.get("OPEN_API_KEY")
-openai.api_key = os.getenv('OPEN_API_KEY')
+openai.api_key = OPEN_API_KEY
 app = FastAPI()
 
 # origins = [
@@ -160,7 +160,7 @@ async def get_answer(data: QuestionContext):
     # Check if context is empty and set default if necessary
     if not data.context:
         data.context = ["Sec 1662", "FOCUS Report Part IIC Instructions", "Exam Brochure", "Sec 1661", "Sec 2866"]
-    openai.api_key = "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"
+    #openai.api_key = "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"
 
     def retrieve(question):
         res = openai.Embedding.create(
@@ -225,6 +225,11 @@ async def get_answer(data: QuestionContext):
 @app.get("/")
 def read_root():
     return {"Hello": "FastAPI"}
+
+@app.get("/test_os")
+def read_root():
+    TEST_KEY = os.getenv("KEY_HERE", "local_value")
+    return {"TEST_KEY": TEST_KEY}
 
 #For Local Hosting
 def main():

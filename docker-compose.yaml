@@ -326,9 +326,12 @@ services:
       - airflow-webserver
     # volumes:
     #   - ./FastAPI:/app
-    environment:
-      - DATABASE_URL=test.db
-      - AIRFLOW_API_ENDPOINT=http://airflow-webserver:8080/api/v1/dags/sandbox/dagRuns
+    # environment:
+    #   - KEY_HERE=${OPEN_API_KEY}
+    #   - DATABASE_URL=test.db
+    #   - AIRFLOW_API_ENDPOINT=http://airflow-webserver:8080/api/v1/dags/sandbox/dagRuns
+    env_file:
+      - .env
 
 
   streamlit:

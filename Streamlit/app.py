@@ -139,9 +139,9 @@ def main_layout():
         submit_button = st.form_submit_button("Get Answer")
 
     if submit_button:
-        if not selected_docs:
-            st.warning("Please select at least one document to proceed with your question.")
-        elif question_input:
+        # if not selected_docs:
+        #     st.warning("Please select at least one document to proceed with your question.")
+        if question_input:
             with st.spinner(f'Fetching answers for selected documents...'):
                 data = {
                     "question": question_input,
