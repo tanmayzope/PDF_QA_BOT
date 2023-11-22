@@ -2,6 +2,8 @@
 
 ## Links
 
+#### Link to the app deployed on Google Compute Engine: [35.185.50.2:8501](http://35.185.50.2:8501)
+
 ##### Link to Codelabs: [Codelabs Presentation](https://codelabs-preview.appspot.com/?file_id=1pfzEO4BiOmfMNl1dTbG8PM2S5FmOmJgInkq3Z08EELA#0)
 
 ##### Link to Embeddings Generation Notebook: [Colab Notebook 1](https://colab.research.google.com/drive/1xm_wly8FaR08YHIZxt_a7QVNytad0_U1?usp=sharing)
@@ -23,10 +25,6 @@ Open `Assignment_03 in any IDE Platform. Since this code has been dockerized it 
 Within your IDE, access the integrated terminal.
 * Open the integrated terminal for the folder and run the command > “docker compose up --build”
 -----------------
-
-## Project Flow Architecture
------------------
-
 ## About Code:
 -----------------
 #### There are three major folders, one is the Streamlit, second is the FastAPI and third is Airflow .
