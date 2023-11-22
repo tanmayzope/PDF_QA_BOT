@@ -64,7 +64,7 @@ Within your IDE, access the integrated terminal.
 ## Additional Notes:
 ---------------
 
-Link to the presentation video - 
+Link to the presentation video - (https://youtu.be/spmfEuGjTKY?si=hPkCCHA_e_71e6zQ)
 
 WE ATTEST THAT WE HAVEN’T USED ANY OTHER STUDENTS’ WORK IN OUR ASSIGNMENT AND ABIDE BY THE POLICIES LISTED IN THE STUDENT HANDBOOK.
 
