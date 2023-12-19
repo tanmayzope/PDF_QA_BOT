@@ -1,4 +1,4 @@
-# Assignment_03
+# PDF QA BOT
 
 ## Links
 
@@ -66,11 +66,7 @@ Link to the presentation video - (https://youtu.be/spmfEuGjTKY?si=hPkCCHA_e_71e6
 
 WE ATTEST THAT WE HAVEN’T USED ANY OTHER STUDENTS’ WORK IN OUR ASSIGNMENT AND ABIDE BY THE POLICIES LISTED IN THE STUDENT HANDBOOK.
 
-| Name            | Percentage | Responsibilities                                 |
-|-----------------|------------|-------------------------------------------------|
-| Soham Deshpande | 45%        | Airflow Pipelines, Integration, Docker Set-up, FastAPI |
-| Tanmay Zope     | 45%        | Embeddings Generation, Data Processings on Pinecone, JWT Auth, Tech Doc |
-| Anvi Jain       | 10%        | Research of Pinecone & Airflow, Tech Doc |
+
 
 
 
