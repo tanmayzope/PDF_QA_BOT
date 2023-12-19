@@ -68,9 +68,9 @@ WE ATTEST THAT WE HAVEN’T USED ANY OTHER STUDENTS’ WORK IN OUR ASSIGNMENT AN
 
 | Name            | Percentage | Responsibilities                                 |
 |-----------------|------------|-------------------------------------------------|
-| Soham Deshpande | 33%        | Airflow Pipelines, Integration, Docker Set-up, FastAPI |
-| Tanmay Zope     | 33%        | Embeddings Generation, Data Processings on Pinecone, JWT Auth, Tech Doc |
-| Anvi Jain       | 33%        | Research of Pinecone & Airflow, Tech Doc |
+| Soham Deshpande | 45%        | Airflow Pipelines, Integration, Docker Set-up, FastAPI |
+| Tanmay Zope     | 45%        | Embeddings Generation, Data Processings on Pinecone, JWT Auth, Tech Doc |
+| Anvi Jain       | 10%        | Research of Pinecone & Airflow, Tech Doc |
 
 
 
